@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+*.dylib
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+!.env.example
+
+# ML artifacts (large binary files — use DVC or external storage in production)
+backend/ml/*.pkl
+
+# FastAPI / Uvicorn
+*.log
+
+# Node
+node_modules/
+dist/
+.next/
+
+# Docker
+*.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
