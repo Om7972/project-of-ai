@@ -1,10 +1,11 @@
 import React from 'react';
-import { Activity, Shield, Phone, User } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Activity, Shield, Phone, User, LayoutDashboard, Stethoscope } from 'lucide-react';
 
 const Navbar = () => {
     return (
         <nav className="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <NavLink to="/" className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-medical-600 flex items-center justify-center text-white shadow-medical">
                     <Activity className="w-6 h-6" />
                 </div>
@@ -16,13 +17,27 @@ const Navbar = () => {
                         Hospital System
                     </p>
                 </div>
-            </div>
+            </NavLink>
 
             <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-                <a href="#" className="text-medical-600 hover:text-medical-700 transition-colors">Assessment</a>
-                <a href="#" className="hover:text-medical-600 transition-colors">Patients</a>
-                <a href="#" className="hover:text-medical-600 transition-colors">Resources</a>
-                <a href="#" className="hover:text-medical-600 transition-colors">Support</a>
+                <NavLink
+                    to="/"
+                    className={({ isActive }) =>
+                        `flex items-center gap-2 transition-colors ${isActive ? 'text-medical-600' : 'hover:text-medical-600'}`
+                    }
+                >
+                    <Stethoscope className="w-4 h-4" />
+                    Assessment
+                </NavLink>
+                <NavLink
+                    to="/admin"
+                    className={({ isActive }) =>
+                        `flex items-center gap-2 transition-colors ${isActive ? 'text-medical-600' : 'hover:text-medical-600'}`
+                    }
+                >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Dashboard
+                </NavLink>
             </div>
 
             <div className="flex items-center gap-3">
