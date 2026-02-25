@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import List
 
 from app.db.database import get_db
@@ -21,26 +22,22 @@ async def run_diagnostic(
     Runs XGBoost inference and persists results to the clinical database.
     (Authenticated)
     """
-    # 1. Create Patient Record if new, or update existing
-    # For now, we create a new patient entry for every unique assessment as requested
     patient = Patient(
         name=payload.patient_name,
         age=payload.age,
         sex=payload.sex
     )
     db.add(patient)
-    await db.flush() # get patient.id without committing yet
+    await db.flush() 
     
-    # 2. Run ML Inference
-    features = payload.dict(exclude={'patient_name'})
+    features = payload.model_dump(exclude={'patient_name'})
     result = ml_service.predict(features)
     
-    # 3. Persist Prediction Result
     prediction = Prediction(
         patient_id=patient.id,
         probability=result["risk_probability"],
         risk_level=result["risk_level"],
-        features_json=str(features) # snapshot for audit trail
+        features_json=str(features)
     )
     db.add(prediction)
     
@@ -60,18 +57,24 @@ async def run_diagnostic(
         "prediction_id": prediction.id
     }
 
-@router.post("/predict/guest", response_model=DiagnosticResponse)
-async def run_guest_diagnostic(payload: DiagnosticInput):
-    """
-    Ephemeral prediction without database persistence.
-    Used for quick clinical screening.
-    """
-    features = payload.dict(exclude={'patient_name'})
-    result = ml_service.predict(features)
+@router.get("/history", tags=["Analytics"])
+async def get_diagnostic_history(
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Fetch complete clinical diagnostic history with patient joins."""
+    query = select(Patient, Prediction).join(Prediction, Patient.id == Prediction.patient_id).order_by(Prediction.created_at.desc())
+    result = await db.execute(query)
     
-    return {
-        "risk_probability": result["risk_probability"],
-        "risk_level": result["risk_level"],
-        "patient_id": 0,
-        "prediction_id": 0
-    }
+    history = []
+    for patient, pred in result.all():
+        history.append({
+            "id": pred.id,
+            "name": patient.name,
+            "age": patient.age,
+            "sex": patient.sex,
+            "prediction_probability": pred.probability,
+            "risk_level": pred.risk_level,
+            "created_at": pred.created_at
+        })
+    return history

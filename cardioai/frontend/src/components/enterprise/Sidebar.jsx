@@ -10,11 +10,15 @@ import {
     Menu,
     X,
     ShieldCheck,
-    Heart
+    Heart,
+    LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
+    const { logout, user } = useAuth();
+
     const menuItems = [
         { icon: <Stethoscope size={20} />, label: 'Risk Assessment', path: '/' },
         { icon: <LayoutDashboard size={20} />, label: 'Admin Analytics', path: '/admin' },
@@ -82,6 +86,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                     {item.label}
                                 </NavLink>
                             ))}
+
+                            <button
+                                onClick={logout}
+                                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl font-bold text-sm transition-all text-red-400 hover:text-red-600 hover:bg-red-50 text-left"
+                            >
+                                <LogOut size={20} />
+                                Sign Out
+                            </button>
 
                             <div className="mt-8 p-4 rounded-2xl bg-slate-50 border border-slate-100">
                                 <div className="flex items-center gap-2 mb-2">

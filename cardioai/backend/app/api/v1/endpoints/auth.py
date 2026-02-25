@@ -3,12 +3,14 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import timedelta
+from typing import List
 
 from app.db.database import get_db
 from app.models.models import User
 from app.schemas.schemas import UserCreate, UserResponse, Token
 from app.core.security import get_password_hash, verify_password, create_access_token
 from app.core.config import settings
+from app.api.v1.deps import check_admin_role
 
 router = APIRouter()
 
@@ -27,7 +29,7 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
         name=user_in.name,
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password),
-        role="doctor"
+        role="admin" if user_in.email == "odhumkekar@gmail.com" else "doctor"
     )
     db.add(new_user)
     await db.commit()
@@ -56,3 +58,12 @@ async def login(
         expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.get("/users", response_model=List[UserResponse])
+async def get_users(
+    db: AsyncSession = Depends(get_db),
+    admin_user = Depends(check_admin_role)
+):
+    """Admin only: Fetch all registered medical staff."""
+    result = await db.execute(select(User).order_by(User.created_at.desc()))
+    return result.scalars().all()

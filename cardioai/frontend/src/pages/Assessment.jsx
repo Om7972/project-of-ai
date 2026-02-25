@@ -23,7 +23,7 @@ const Assessment = () => {
         setLoading(true);
         setResult(null);
         try {
-            const response = await axios.post('http://localhost:8000/predict', formData);
+            const response = await axios.post('http://localhost:8000/api/v1/predictions/predict', formData);
             setResult(response.data);
             toast.success('Clinical analysis synchronized');
         } catch (error) {

@@ -247,17 +247,28 @@ Services:
 
 ---
 
-## 🛡️ Security Features
+## 🚀 Enterprise Features
 
-- **JWT Bearer tokens** — issued on login, required for all protected endpoints
-- **bcrypt password hashing** — via passlib
-- **CORS middleware** — restricted to configured origins
-- **Pydantic validation** — all inputs validated with clinical range checks
-- **Role-based access** — admin / doctor / nurse / patient roles
-- **Rate limiting** — via slowapi (configurable per-route)
+- **🛡️ Clinical JWT Authentication**: Secure staff onboarding and login system with cryptographically protected sessions.
+- **🏥 Multi-Module UI**: High-fidelity React frontend with Framer Motion animations and glassmorphism.
+- **🤖 XGBoost Inference Engine**: Predictive cardiac diagnostics with real-time risk classification.
+- **📊 Hospital Intelligence Hub**: Advanced analytics dashboard with patient records and staff oversight.
+- **🔐 Role-Based Access (RBAC)**: Distinct permissions for **Doctors** and **Administrators**.
 
----
+## 🔑 Admin Credentials
+The system automatically promotes the following user to **Administrator** status upon registration:
+- **Email**: `odhumkekar@gmail.com`
+- **Permissions**: Full access to the Patient Analytics and Staff Directory.
 
-## 📝 License
+## 🛠️ Local Development
 
-MIT License — © 2026 CardioAI Team
+### 1. Backend Setup (FastAPI)
+1. Navigate to `/backend`.
+2. Install dependencies: `pip install -r requirements.txt`.
+3. Create a `.env` file (see `.env.example`).
+4. Run server: `python -m uvicorn app.main:app --reload`.
+
+### 2. Frontend Setup (React + Vite)
+1. Navigate to `/frontend`.
+2. Install dependencies: `npm install`.
+3. Run dev server: `npm run dev`.
