@@ -1,36 +1,40 @@
-FROM python:3.11-slim
-
-# ── Labels ────────────────────────────────────────────────────
-LABEL maintainer="CardioAI Team"
-LABEL description="CardioAI Hospital System — FastAPI Backend"
-
-# ── System dependencies ───────────────────────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# ── Build Stage (Optional but recommended for speed) ────────
+FROM python:3.11-slim as builder
 
 WORKDIR /app
 
-# ── Python dependencies ───────────────────────────────────────
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# ── Copy source ───────────────────────────────────────────────
+# Install python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# ── Production Stage ────────────────────────────────────────
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy dependencies from builder or install directly for simplicity in this context
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy application code
 COPY . .
 
-# ── Train model if .pkl files don't exist ────────────────────
-RUN python scripts/train_model.py
+# Ensure ML directories exist
+RUN mkdir -p ml
 
-# ── Runtime ──────────────────────────────────────────────────
+# Force stdout/stderr logs
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Expose FastAPI port
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/api/health').raise_for_status()"
-
-CMD ["uvicorn", "app.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8000", \
-     "--workers", "2", \
-     "--log-level", "info"]
+# Production CMD using Gunicorn + Uvicorn Workers
+CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--access-logfile", "-", "--error-logfile", "-"]

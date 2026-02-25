@@ -1,204 +1,90 @@
-"""
-CardioAI — ML Prediction Service
-Loads advanced_heart_model.pkl (XGBoost) + advanced_scaler.pkl (StandardScaler).
-Falls back to a calibrated heuristic when model files are absent (dev/demo mode).
-"""
-
 import os
-import logging
-import numpy as np
 import joblib
-from pathlib import Path
-from typing import Tuple, Optional
-
-from app.core.config import settings
+import numpy as np
+import logging
+import pandas as pd
+from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
-# Feature order MUST match training data column order
-FEATURE_COLUMNS = [
-    "age", "sex", "cp", "trestbps", "chol",
-    "fbs", "restecg", "thalach", "exang",
-    "oldpeak", "slope", "ca", "thal",
-]
-
-RISK_THRESHOLDS = {
-    "Low":      (0.00, 0.40),
-    "Moderate": (0.40, 0.65),
-    "High":     (0.65, 1.01),
-}
-
-
-class CardiacMLService:
-    """
-    Singleton service for cardiac disease probability prediction.
-
-    Priority:
-      1. XGBoost model (advanced_heart_model.pkl) +
-         StandardScaler (advanced_scaler.pkl)
-      2. Calibrated heuristic fallback (no external files required)
-    """
-
+class MLService:
+    """Enterprise service for heart disease prediction using XGBoost."""
+    
     def __init__(self):
-        self.model  = None
+        self.model = None
         self.scaler = None
-        self._load_artifacts()
+        self.is_model_loaded = False
+        self._load_resources()
 
-    # ──────────────────────────────────────────────────────────────────────────
-    # Private helpers
-    # ──────────────────────────────────────────────────────────────────────────
-
-    def _load_artifacts(self) -> None:
-        model_path  = Path(settings.MODEL_PATH)
-        scaler_path = Path(settings.SCALER_PATH)
-
-        if model_path.exists():
-            try:
+    def _load_resources(self):
+        """Load trained model and scaler from artifact paths."""
+        try:
+            model_path = os.getenv("MODEL_PATH", "ml/advanced_heart_model.pkl")
+            scaler_path = os.getenv("SCALER_PATH", "ml/advanced_scaler.pkl")
+            
+            if os.path.exists(model_path):
                 self.model = joblib.load(model_path)
-                logger.info("✅  XGBoost model loaded from %s", model_path)
-            except Exception as exc:
-                logger.error("❌  Model load failed: %s", exc)
-
-        if scaler_path.exists():
-            try:
+                logger.info(f"✅ Neural model loaded from {model_path}")
+            
+            if os.path.exists(scaler_path):
                 self.scaler = joblib.load(scaler_path)
-                logger.info("✅  Scaler loaded from %s", scaler_path)
-            except Exception as exc:
-                logger.error("❌  Scaler load failed: %s", exc)
+                logger.info(f"✅ Clinical scaler loaded from {scaler_path}")
 
-        if self.model is None:
-            logger.warning(
-                "⚠️   Model not found at '%s'. "
-                "Heuristic fallback is active (demo mode).",
-                model_path,
-            )
+            if self.model and self.scaler:
+                self.is_model_loaded = True
+            else:
+                logger.warning("⚠️ ML artifacts not found. Clinical heuristic fallback active.")
 
-    def _preprocess(self, features: np.ndarray) -> np.ndarray:
-        """Apply scaler if available, else return raw features."""
-        if self.scaler is not None:
-            return self.scaler.transform(features)
-        return features
+        except Exception as e:
+            logger.error(f"❌ Critical failure loading ML resources: {str(e)}")
 
-    # ── Heuristic fallback ────────────────────────────────────────────────────
+    def predict(self, features: Dict[str, Any]) -> Dict[str, Any]:
+        """Run diagnostic inference on patient feature vector."""
+        try:
+            if not self.is_model_loaded:
+                return self._heuristic_fallback(features)
 
-    def _heuristic_fallback(self, raw: list) -> Tuple[float, float]:
-        """
-        Calibrated risk heuristic based on AHA / ESC guidelines.
-        Returns (raw_score 0-1, probability 0-1).
-        """
-        (age, sex, cp, trestbps, chol, fbs,
-         restecg, thalach, exang, oldpeak, slope, ca, thal) = raw
-
-        score = 0.0
-
-        # Age
-        if age >= 65:   score += 3.0
-        elif age >= 55: score += 2.0
-        elif age >= 45: score += 1.0
-
-        # Sex (male higher risk)
-        score += 1.0 if sex == 1 else 0.0
-
-        # Chest pain type (0=typical angina is highest risk)
-        score += {0: 3.0, 1: 2.0, 2: 1.5, 3: 0.5}.get(int(cp), 0)
-
-        # Blood pressure
-        if trestbps > 160:  score += 2.5
-        elif trestbps > 140: score += 1.5
-        elif trestbps > 120: score += 0.5
-
-        # Cholesterol
-        if chol > 300:    score += 2.0
-        elif chol > 240:  score += 1.0
-
-        # Fasting blood sugar
-        score += 1.0 if fbs == 1 else 0.0
-
-        # Max heart rate — low is bad
-        if thalach < 90:  score += 3.0
-        elif thalach < 120: score += 2.0
-        elif thalach < 140: score += 1.0
-
-        # Exercise-induced angina
-        score += 2.0 if exang == 1 else 0.0
-
-        # ST depression
-        if oldpeak > 3.0:   score += 3.0
-        elif oldpeak > 2.0: score += 2.0
-        elif oldpeak > 1.0: score += 1.0
-
-        # ST slope (0=upsloping better, 2=downsloping worse)
-        score += {0: 0.0, 1: 1.0, 2: 2.5}.get(int(slope), 0)
-
-        # Major vessels
-        score += min(ca, 3) * 2.0
-
-        # Thalassemia (3=reversible defect is worst)
-        score += {0: 0.0, 1: 0.5, 2: 0.0, 3: 3.0}.get(int(thal), 0)
-
-        # Normalise to 0-1 via sigmoid-like mapping (max ~30 points)
-        probability = min(score / 28.0, 0.99)
-        return probability
-
-    # ──────────────────────────────────────────────────────────────────────────
-    # Public API
-    # ──────────────────────────────────────────────────────────────────────────
-
-    def predict(self, features: list) -> dict:
-        """
-        Run cardiac disease prediction.
-
-        Args:
-            features: list of 13 values ordered as FEATURE_COLUMNS
-
-        Returns:
-            {
-                "risk_probability": float,   # 0-100 (%)
-                "risk_level": str,           # "Low" | "Moderate" | "High"
-                "prediction": int,           # 0 = no disease, 1 = disease
-                "confidence": float,         # 0-1
-                "model_used": str,
+            # Map dict to model-expected vector order
+            feature_order = [
+                'age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 
+                'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal'
+            ]
+            vector = [features.get(f, 0) for f in feature_order]
+            
+            # Scale and Predict
+            scaled_vector = self.scaler.transform([vector])
+            prob = self.model.predict_proba(scaled_vector)[0][1] * 100
+            
+            return {
+                "risk_probability": round(float(prob), 2),
+                "risk_level": self._classify_risk(prob),
+                "engine": "XGBoost-v1.2",
             }
-        """
-        raw_array = np.array(features, dtype=float).reshape(1, -1)
+        except Exception as e:
+            logger.error(f"Prediction engine fault: {str(e)}")
+            return self._heuristic_fallback(features)
 
-        if self.model is not None:
-            try:
-                scaled = self._preprocess(raw_array)
-                prediction    = int(self.model.predict(scaled)[0])
-                probability   = float(self.model.predict_proba(scaled)[0][1])
-                model_used    = "XGBoost (advanced_heart_model.pkl)"
-            except Exception as exc:
-                logger.error("⚠️  Model inference failed, using fallback: %s", exc)
-                probability = self._heuristic_fallback(features)
-                prediction  = 1 if probability >= 0.50 else 0
-                model_used  = "Heuristic Fallback"
-        else:
-            probability = self._heuristic_fallback(features)
-            prediction  = 1 if probability >= 0.50 else 0
-            model_used  = "Heuristic Fallback (model file not found)"
+    def _classify_risk(self, prob: float) -> str:
+        if prob >= 65: return "High"
+        if prob >= 40: return "Moderate"
+        return "Low"
 
-        risk_level = self._classify_risk(probability)
-
+    def _heuristic_fallback(self, features: Dict[str, Any]) -> Dict[str, Any]:
+        """Safety fallback using clinical markers if model is unavailable."""
+        score = 0
+        if features.get('age', 0) > 60: score += 15
+        if features.get('sex', 0) == 1: score += 10
+        if features.get('trestbps', 0) > 140: score += 15
+        if features.get('chol', 0) > 240: score += 10
+        if features.get('thalach', 0) < 140: score += 10
+        if features.get('cp', 0) in [3, 4]: score += 20
+        
+        prob = min(score, 95)
         return {
-            "risk_probability": round(probability * 100, 2),
-            "risk_level":       risk_level,
-            "prediction":       prediction,
-            "confidence":       round(probability, 4),
-            "model_used":       model_used,
+            "risk_probability": float(prob),
+            "risk_level": self._classify_risk(prob),
+            "engine": "Clinical-Heuristic",
         }
 
-    @staticmethod
-    def _classify_risk(probability: float) -> str:
-        for level, (low, high) in RISK_THRESHOLDS.items():
-            if low <= probability < high:
-                return level
-        return "High"
-
-    @property
-    def is_model_loaded(self) -> bool:
-        return self.model is not None
-
-
-# ── Singleton ─────────────────────────────────────────────────────────────────
-ml_service = CardiacMLService()
+# Singleton instance
+ml_service = MLService()

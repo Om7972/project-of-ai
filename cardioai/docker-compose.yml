@@ -1,26 +1,26 @@
 version: "3.9"
 
 services:
-  # ── PostgreSQL Database ─────────────────────────────────────
+  # ── PostgreSQL Clinical Database ───────────────────────────
   db:
     image: postgres:16-alpine
     container_name: cardioai_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER:     cardioai_user
-      POSTGRES_PASSWORD: cardioai_password
-      POSTGRES_DB:       cardioai_db
+      POSTGRES_USER: ${DB_USER:-cardioai_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-cardioai_password}
+      POSTGRES_DB: ${DB_NAME:-cardioai_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cardioai_user -d cardioai_db"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-cardioai_user} -d ${DB_NAME:-cardioai_db}" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ── FastAPI Backend ─────────────────────────────────────────
+  # ── FastAPI Healthcare API ─────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -28,59 +28,18 @@ services:
     container_name: cardioai_backend
     restart: unless-stopped
     environment:
-      DATABASE_URL:      postgresql+asyncpg://cardioai_user:cardioai_password@db:5432/cardioai_db
-      DATABASE_URL_SYNC: postgresql://cardioai_user:cardioai_password@db:5432/cardioai_db
-      SECRET_KEY:        change-me-to-a-random-secret-key-in-prod
-      ALGORITHM:         HS256
+      DATABASE_URL: postgresql+asyncpg://${DB_USER:-cardioai_user}:${DB_PASSWORD:-cardioai_password}@db:5432/${DB_NAME:-cardioai_db}
+      SECRET_KEY: ${SECRET_KEY:-change-me-to-a-random-secret-key-in-prod}
+      ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 60
-      ALLOWED_ORIGINS:   "http://localhost:3000,http://localhost:5173,http://localhost:80"
-      MODEL_PATH:        ml/advanced_heart_model.pkl
-      SCALER_PATH:       ml/advanced_scaler.pkl
-      DEBUG:             "False"
+      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:5173,http://localhost:5174"
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
     volumes:
-      - ./backend/ml:/app/ml   # persist trained model between restarts
-    healthcheck:
-      test: ["CMD", "python", "-c",
-             "import httpx; httpx.get('http://localhost:8000/api/health').raise_for_status()"]
-      interval: 30s
-      timeout: 10s
-      start_period: 30s
-      retries: 3
-
-  # ── React Frontend ──────────────────────────────────────────
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: cardioai_frontend
-    restart: unless-stopped
-    ports:
-      - "3000:80"
-    depends_on:
-      backend:
-        condition: service_healthy
-    environment:
-      VITE_API_URL: http://localhost:8000
-
-  # ── Nginx Reverse Proxy (optional) ─────────────────────────
-  nginx:
-    image: nginx:alpine
-    container_name: cardioai_nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - backend
-      - frontend
-    profiles:
-      - production   # only start with: docker compose --profile production up
+      - ./backend/ml:/app/ml # Model persistence
 
 volumes:
   postgres_data:
