@@ -6,91 +6,76 @@
 
 @layer base {
   :root {
-    --bg-main: #f8fbff;
-    --bg-card: #ffffff;
     --medical-primary: #0077b6;
     --medical-secondary: #00b4d8;
-    --medical-accent: #ade8f4;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --border-light: #e2e8f0;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
+    --bg-main: #f8fafc;
   }
 
   body {
     @apply text-slate-800 font-sans antialiased;
     background-color: var(--bg-main);
   }
-
-  /* Professional Scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: var(--bg-main);
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-    border: 2px solid var(--bg-main);
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--medical-primary);
-  }
-
-  ::selection {
-    background: rgba(0, 119, 182, 0.1);
-    color: var(--medical-primary);
-  }
 }
 
 @layer components {
-  .medical-card {
-    @apply bg-white rounded-2xl border border-slate-200 shadow-medical transition-all duration-300;
+  .enterprise-card {
+    @apply bg-white rounded-3xl border border-slate-100 shadow-medical transition-all duration-300;
   }
 
-  .medical-card-hover {
-    @apply hover:shadow-medical-lg hover:-translate-y-1;
+  .glass-effect {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-glass;
   }
 
-  .btn-medical {
-    @apply inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95 disabled:opacity-50;
-    background: linear-gradient(135deg, var(--medical-primary) 0%, var(--medical-secondary) 100%);
+  .btn-enterprise {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
     color: white;
     box-shadow: 0 4px 12px rgba(0, 119, 182, 0.2);
   }
 
-  .btn-medical:hover:not(:disabled) {
-    box-shadow: 0 6px 20px rgba(0, 119, 182, 0.3);
-    @apply -translate-y-0.5;
+  .btn-enterprise-outline {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm border-2 border-slate-100 text-slate-600 transition-all duration-200 hover:bg-slate-50 hover:border-slate-200;
+  }
+
+  .medical-input-group {
+    @apply relative flex flex-col gap-1.5;
   }
 
   .medical-input {
-    @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 transition-all duration-200 outline-none text-slate-800 placeholder:text-slate-400;
+    @apply w-full px-5 py-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-medical-500/10 focus:border-medical-500 transition-all duration-200 outline-none text-slate-800 placeholder:text-slate-400 font-medium;
   }
 
   .medical-label {
-    @apply block text-sm font-semibold text-slate-700 mb-1.5;
+    @apply block text-sm font-bold text-slate-700 ml-1;
   }
 
-  .risk-badge {
-    @apply px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+  .nav-link-active {
+    @apply bg-medical-50 text-medical-600 shadow-sm border-r-4 border-medical-600;
+  }
+
+  .nav-link-inactive {
+    @apply text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all;
   }
 }
 
-/* Custom Utilities */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 119, 182, 0.1);
+/* Custom Scrollbar for Enterprise UI */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-.medical-gradient-text {
-  @apply bg-clip-text text-transparent;
-  background-image: linear-gradient(135deg, #0077b6, #00b4d8);
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0077b6;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-medical-700 to-medical-400;
 }

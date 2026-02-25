@@ -112,7 +112,7 @@ const AdminDashboard = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat, idx) => (
-                    <div key={idx} className="medical-card p-6 flex items-center gap-4">
+                    <div key={idx} className="enterprise-card p-6 flex items-center gap-4">
                         <div className={`w-12 h-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center shadow-sm`}>
                             {stat.icon}
                         </div>
@@ -126,7 +126,7 @@ const AdminDashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Table Section */}
-                <div className="lg:col-span-2 medical-card overflow-hidden">
+                <div className="lg:col-span-2 enterprise-card overflow-hidden">
                     <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="relative flex-1 max-w-sm">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -172,7 +172,7 @@ const AdminDashboard = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`risk-badge ${p.risk_level === 'High' ? 'bg-red-50 text-red-600' :
-                                                    p.risk_level === 'Moderate' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                                                p.risk_level === 'Moderate' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
                                                 }`}>
                                                 {p.risk_level}
                                             </span>
@@ -205,7 +205,7 @@ const AdminDashboard = () => {
 
                 {/* Chart Section */}
                 <div className="space-y-8">
-                    <div className="medical-card p-8">
+                    <div className="enterprise-card p-8">
                         <h2 className="text-lg font-bold text-slate-800 mb-6 font-display">Risk Distribution</h2>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
@@ -230,7 +230,7 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    <div className="medical-card p-6 bg-medical-600 text-white shadow-medical-lg">
+                    <div className="enterprise-card p-6 bg-medical-600 text-white shadow-medical-lg">
                         <h3 className="font-display font-bold text-lg mb-2">System Health</h3>
                         <p className="text-sm text-medical-50 font-medium mb-4">All diagnostics services are operational. Model accuracy verified at 92.4%.</p>
                         <div className="flex items-center gap-3">
