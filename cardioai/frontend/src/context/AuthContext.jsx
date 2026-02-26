@@ -17,7 +17,13 @@ export const AuthProvider = ({ children }) => {
                     localStorage.setItem('cardioai_user', JSON.stringify(response.data));
                 } catch (error) {
                     console.error('Failed to fetch user:', error);
-                    logout();
+                    if (error.response && error.response.status === 401) {
+                        logout();
+                    } else {
+                        // Fallback to locally stored user if network issue or 404
+                        const savedUser = localStorage.getItem('cardioai_user');
+                        if (savedUser) setUser(JSON.parse(savedUser));
+                    }
                 }
             }
             setLoading(false);
@@ -28,19 +34,24 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             const response = await authApi.login(email, password);
-            const { access_token } = response.data;
+            const { access_token, user: loggedInUser } = response.data;
 
             setToken(access_token);
             localStorage.setItem('cardioai_token', access_token);
 
-            // Fetch real user info right after
-            try {
-                // Manually set token for this initial request as state update may be pending
-                const meResponse = await authApi.me();
-                setUser(meResponse.data);
-                localStorage.setItem('cardioai_user', JSON.stringify(meResponse.data));
-            } catch (err) {
-                console.error('Could not fetch user profile details after login', err);
+            if (loggedInUser) {
+                setUser(loggedInUser);
+                localStorage.setItem('cardioai_user', JSON.stringify(loggedInUser));
+            } else {
+                // Fetch real user info right after
+                try {
+                    // Manually set token for this initial request as state update may be pending
+                    const meResponse = await authApi.me();
+                    setUser(meResponse.data);
+                    localStorage.setItem('cardioai_user', JSON.stringify(meResponse.data));
+                } catch (err) {
+                    console.error('Could not fetch user profile details after login', err);
+                }
             }
 
             return { success: true };

@@ -57,7 +57,7 @@ async def login(
         data={"sub": user.email, "role": user.role}, 
         expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 from app.api.v1.deps import get_current_user
 
