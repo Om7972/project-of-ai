@@ -59,6 +59,13 @@ async def login(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+from app.api.v1.deps import get_current_user
+
+@router.get("/me", response_model=UserResponse)
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    """Fetch the currently authenticated user."""
+    return current_user
+
 @router.get("/users", response_model=List[UserResponse])
 async def get_users(
     db: AsyncSession = Depends(get_db),

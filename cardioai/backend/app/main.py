@@ -108,3 +108,4 @@ async def health_check():
         "db_connected": True, # basic check for endpoint availability
         "timestamp": datetime.utcnow()
     }
+
