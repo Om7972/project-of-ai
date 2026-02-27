@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import {
     Users,
     AlertCircle,
@@ -43,12 +43,12 @@ const AdminDashboard = () => {
             setLoading(true);
             try {
                 // Fetch Patients (History)
-                const patientRes = await axios.get('http://localhost:8000/api/v1/predictions/history');
+                const patientRes = await api.get('/predictions/history');
                 setPatients(patientRes.data);
 
                 // Fetch Staff if Admin
                 if (isAdmin) {
-                    const staffRes = await axios.get('http://localhost:8000/api/v1/auth/users');
+                    const staffRes = await api.get('/auth/users');
                     setStaff(staffRes.data);
                 }
             } catch (error) {

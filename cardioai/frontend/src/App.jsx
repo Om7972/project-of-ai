@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import Sidebar from './components/enterprise/Sidebar';
 import Assessment from './pages/Assessment';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ProfileSettings from './pages/ProfileSettings';
+import Configurations from './pages/Configurations';
+import HelpSupport from './pages/HelpSupport';
+import SystemSettings from './pages/SystemSettings';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Menu, Search, Bell, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -59,12 +63,12 @@ const Layout = ({ children }) => {
 
                                 {/* Popover Menu */}
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                    <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50">
+                                    <Link to="/profile" className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50">
                                         <UserIcon size={16} /> Profile Settings
-                                    </button>
-                                    <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50">
+                                    </Link>
+                                    <Link to="/configurations" className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50">
                                         <Settings size={16} /> Configurations
-                                    </button>
+                                    </Link>
                                     <div className="h-px bg-slate-50 my-2" />
                                     <button
                                         onClick={logout}
@@ -119,6 +123,46 @@ const App = () => {
                         <ProtectedRoute>
                             <Layout>
                                 <AdminDashboard />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <Layout>
+                                <ProfileSettings />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/configurations"
+                    element={
+                        <ProtectedRoute>
+                            <Layout>
+                                <Configurations />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/settings"
+                    element={
+                        <ProtectedRoute>
+                            <Layout>
+                                <SystemSettings />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/support"
+                    element={
+                        <ProtectedRoute>
+                            <Layout>
+                                <HelpSupport />
                             </Layout>
                         </ProtectedRoute>
                     }
