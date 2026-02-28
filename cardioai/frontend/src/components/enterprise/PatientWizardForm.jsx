@@ -21,9 +21,9 @@ const steps = [
 const PatientWizardForm = ({ onSubmit, loading }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({
-        patient_name: '', age: '', sex: '1', cp: '1', trestbps: '',
-        chol: '', fbs: '0', restecg: '0', thalach: '', exang: '0',
-        oldpeak: '', slope: '1', ca: '0', thal: '2',
+        patient_name: '', age: '', gender: '1', height: '', weight: '',
+        ap_hi: '', ap_lo: '', cholesterol: '1', gluc: '1',
+        smoke: '0', alco: '0', active: '1'
     });
 
     const handleChange = (e) => {
@@ -96,10 +96,10 @@ const PatientWizardForm = ({ onSubmit, loading }) => {
                                         <input type="number" name="age" value={formData.age} onChange={handleChange} placeholder="54" className="medical-input" required />
                                     </div>
                                     <div className="medical-input-group">
-                                        <label className="medical-label">Sex</label>
-                                        <select name="sex" value={formData.sex} onChange={handleChange} className="medical-input">
-                                            <option value="1">Male</option>
-                                            <option value="0">Female</option>
+                                        <label className="medical-label">Gender</label>
+                                        <select name="gender" value={formData.gender} onChange={handleChange} className="medical-input">
+                                            <option value="1">Female</option>
+                                            <option value="2">Male</option>
                                         </select>
                                     </div>
                                 </div>
@@ -121,20 +121,20 @@ const PatientWizardForm = ({ onSubmit, loading }) => {
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="medical-input-group">
-                                    <label className="medical-label">Blood Pressure (mmHg) <Tooltip text="Resting systolic reading (e.g. 120)." /></label>
-                                    <input type="number" name="trestbps" value={formData.trestbps} onChange={handleChange} className="medical-input" required />
+                                    <label className="medical-label">Height (cm)</label>
+                                    <input type="number" name="height" value={formData.height} onChange={handleChange} placeholder="170" className="medical-input" required />
                                 </div>
                                 <div className="medical-input-group">
-                                    <label className="medical-label">Serum Cholestoral <Tooltip text="Total cholesterol (mg/dL)." /></label>
-                                    <input type="number" name="chol" value={formData.chol} onChange={handleChange} className="medical-input" required />
+                                    <label className="medical-label">Weight (kg)</label>
+                                    <input type="number" step="0.1" name="weight" value={formData.weight} onChange={handleChange} placeholder="70" className="medical-input" required />
                                 </div>
                                 <div className="medical-input-group">
-                                    <label className="medical-label">Max Heart Rate <Tooltip text="Observed during stress testing." /></label>
-                                    <input type="number" name="thalach" value={formData.thalach} onChange={handleChange} className="medical-input" required />
+                                    <label className="medical-label">Systolic BP (mmHg) <Tooltip text="High blood pressure reading (e.g. 120)." /></label>
+                                    <input type="number" name="ap_hi" value={formData.ap_hi} onChange={handleChange} className="medical-input" required />
                                 </div>
                                 <div className="medical-input-group">
-                                    <label className="medical-label">ST Depression <Tooltip text="Depression induced by exercise relative to rest." /></label>
-                                    <input type="number" step="0.1" name="oldpeak" value={formData.oldpeak} onChange={handleChange} className="medical-input" required />
+                                    <label className="medical-label">Diastolic BP (mmHg) <Tooltip text="Low blood pressure reading (e.g. 80)." /></label>
+                                    <input type="number" name="ap_lo" value={formData.ap_lo} onChange={handleChange} className="medical-input" required />
                                 </div>
                             </div>
                         </motion.div>
@@ -154,34 +154,40 @@ const PatientWizardForm = ({ onSubmit, loading }) => {
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="medical-input-group">
-                                    <label className="medical-label">Chest Pain Type</label>
-                                    <select name="cp" value={formData.cp} onChange={handleChange} className="medical-input">
-                                        <option value="1">Typical Angina</option>
-                                        <option value="2">Atypical Angina</option>
-                                        <option value="3">Non-anginal Pain</option>
-                                        <option value="4">Asymptomatic</option>
+                                    <label className="medical-label">Cholesterol</label>
+                                    <select name="cholesterol" value={formData.cholesterol} onChange={handleChange} className="medical-input">
+                                        <option value="1">Normal</option>
+                                        <option value="2">Above Normal</option>
+                                        <option value="3">Well Above Normal</option>
                                     </select>
                                 </div>
                                 <div className="medical-input-group">
-                                    <label className="medical-label">Thal Testing</label>
-                                    <select name="thal" value={formData.thal} onChange={handleChange} className="medical-input">
-                                        <option value="3">Normal</option>
-                                        <option value="6">Fixed Defect</option>
-                                        <option value="7">Reversable Defect</option>
+                                    <label className="medical-label">Glucose</label>
+                                    <select name="gluc" value={formData.gluc} onChange={handleChange} className="medical-input">
+                                        <option value="1">Normal</option>
+                                        <option value="2">Above Normal</option>
+                                        <option value="3">Well Above Normal</option>
                                     </select>
                                 </div>
                                 <div className="medical-input-group">
-                                    <label className="medical-label">ST Slope</label>
-                                    <select name="slope" value={formData.slope} onChange={handleChange} className="medical-input">
-                                        <option value="1">Upsloping</option>
-                                        <option value="2">Flat</option>
-                                        <option value="3">Downsloping</option>
+                                    <label className="medical-label">Smoking History</label>
+                                    <select name="smoke" value={formData.smoke} onChange={handleChange} className="medical-input">
+                                        <option value="0">Non-smoker</option>
+                                        <option value="1">Smoker</option>
                                     </select>
                                 </div>
                                 <div className="medical-input-group">
-                                    <label className="medical-label">Colored Vessels</label>
-                                    <select name="ca" value={formData.ca} onChange={handleChange} className="medical-input">
-                                        {[0, 1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}
+                                    <label className="medical-label">Alcohol Intake</label>
+                                    <select name="alco" value={formData.alco} onChange={handleChange} className="medical-input">
+                                        <option value="0">Rarely/Never</option>
+                                        <option value="1">Regular Intake</option>
+                                    </select>
+                                </div>
+                                <div className="medical-input-group">
+                                    <label className="medical-label">Physical Activity</label>
+                                    <select name="active" value={formData.active} onChange={handleChange} className="medical-input">
+                                        <option value="0">Sedentary</option>
+                                        <option value="1">Active</option>
                                     </select>
                                 </div>
                             </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { predictApi } from '../services/api';
 import PatientWizardForm from '../components/enterprise/PatientWizardForm';
 import RiskResultCard from '../components/enterprise/RiskResultCard';
 import {
@@ -23,7 +23,7 @@ const Assessment = () => {
         setLoading(true);
         setResult(null);
         try {
-            const response = await axios.post('http://localhost:8000/api/v1/predictions/predict', formData);
+            const response = await predictApi.predict(formData);
             setResult(response.data);
             toast.success('Clinical analysis synchronized');
         } catch (error) {

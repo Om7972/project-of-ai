@@ -25,7 +25,7 @@ async def run_diagnostic(
     patient = Patient(
         name=payload.patient_name,
         age=payload.age,
-        sex=payload.sex
+        sex=payload.gender
     )
     db.add(patient)
     await db.flush() 

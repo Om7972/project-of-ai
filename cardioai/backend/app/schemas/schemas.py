@@ -70,18 +70,16 @@ class PredictionResponse(PredictionBase):
 class DiagnosticInput(BaseModel):
     patient_name: str
     age: int
-    sex: int
-    trestbps: int
-    chol: int
-    thalach: int
-    oldpeak: float
-    cp: int # chest pain
-    fbs: int # fasting blood sugar
-    restecg: int
-    exang: int # exercise induced angina
-    slope: int
-    ca: int # vessels
-    thal: int
+    gender: int
+    height: int
+    weight: float
+    ap_hi: int
+    ap_lo: int
+    cholesterol: int
+    gluc: int
+    smoke: int
+    alco: int
+    active: int
 
 class DiagnosticResponse(BaseModel):
     risk_probability: float

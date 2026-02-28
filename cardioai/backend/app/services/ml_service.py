@@ -46,8 +46,8 @@ class MLService:
 
             # Map dict to model-expected vector order
             feature_order = [
-                'age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 
-                'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal'
+                'age', 'gender', 'height', 'weight', 'ap_hi', 'ap_lo', 
+                'cholesterol', 'gluc', 'smoke', 'alco', 'active'
             ]
             vector = [features.get(f, 0) for f in feature_order]
             
@@ -73,11 +73,13 @@ class MLService:
         """Safety fallback using clinical markers if model is unavailable."""
         score = 0
         if features.get('age', 0) > 60: score += 15
-        if features.get('sex', 0) == 1: score += 10
-        if features.get('trestbps', 0) > 140: score += 15
-        if features.get('chol', 0) > 240: score += 10
-        if features.get('thalach', 0) < 140: score += 10
-        if features.get('cp', 0) in [3, 4]: score += 20
+        if features.get('gender', 0) == 2: score += 10 # Men might have higher baseline risk, dataset uses 1=women, 2=men
+        if features.get('ap_hi', 0) > 140: score += 15
+        if features.get('ap_lo', 0) > 90: score += 10
+        if features.get('cholesterol', 0) > 1: score += 15
+        if features.get('gluc', 0) > 1: score += 10
+        if features.get('smoke', 0) == 1: score += 10
+        if features.get('active', 0) == 0: score += 10
         
         prob = min(score, 95)
         return {
