@@ -9,6 +9,7 @@ import ProfileSettings from './pages/ProfileSettings';
 import Configurations from './pages/Configurations';
 import HelpSupport from './pages/HelpSupport';
 import SystemSettings from './pages/SystemSettings';
+import LandingPage from './pages/LandingPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Menu, Search, Bell, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -103,12 +104,13 @@ const App = () => {
             <Toaster position="top-right" />
             <Routes>
                 {/* Public Routes */}
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
                 {/* Protected Clinical Routes */}
                 <Route
-                    path="/"
+                    path="/dashboard"
                     element={
                         <ProtectedRoute>
                             <Layout>

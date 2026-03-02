@@ -18,7 +18,7 @@ const Login = () => {
         try {
             await login(email, password);
             toast.success('Clinical Session Authorized');
-            navigate('/');
+            navigate('/dashboard');
         } catch (error) {
             toast.error('Authentication Failed: Invalid Credentials');
         } finally {

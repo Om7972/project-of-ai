@@ -20,7 +20,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     const { logout, user } = useAuth();
 
     const menuItems = [
-        { icon: <Stethoscope size={20} />, label: 'Risk Assessment', path: '/' },
+        { icon: <Stethoscope size={20} />, label: 'Risk Assessment', path: '/dashboard' },
         { icon: <LayoutDashboard size={20} />, label: 'Admin Analytics', path: '/admin' },
         { icon: <Users size={20} />, label: 'Patients List', path: '/patients' },
     ];

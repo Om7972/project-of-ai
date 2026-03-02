@@ -11,6 +11,10 @@
     --bg-main: #f8fafc;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply text-slate-800 font-sans antialiased;
     background-color: var(--bg-main);
