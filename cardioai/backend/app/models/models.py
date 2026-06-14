@@ -23,7 +23,7 @@ class Patient(Base):
     id         = Column(Integer, primary_key=True, index=True)
     name       = Column(String(255), nullable=False)
     age        = Column(Integer, nullable=False)
-    sex        = Column(Integer, nullable=False) # 1=M, 0=F
+    gender     = Column(Integer, nullable=False) # 1: Female, 2: Male
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     # Relationship to predictions

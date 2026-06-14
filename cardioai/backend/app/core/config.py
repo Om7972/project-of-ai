@@ -2,7 +2,6 @@ from pydantic_settings import BaseSettings
 from typing import List
 import os
 
-
 class Settings(BaseSettings):
     # ── App ──────────────────────────────────────────────────────────────────
     APP_NAME: str = "CardioAI Hospital System"
@@ -11,10 +10,10 @@ class Settings(BaseSettings):
 
     # ── Database ─────────────────────────────────────────────────────────────
     DATABASE_URL: str = (
-        "postgresql+asyncpg://cardioai_user:cardioai_password@localhost:5432/cardioai_db"
+        "sqlite+aiosqlite:///./cardioai.db"  # Use SQLite for local dev
     )
     DATABASE_URL_SYNC: str = (
-        "postgresql://cardioai_user:cardioai_password@localhost:5432/cardioai_db"
+        "sqlite:///./cardioai.db"
     )
 
     # ── Security ─────────────────────────────────────────────────────────────
@@ -38,6 +37,5 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
-
 
 settings = Settings()

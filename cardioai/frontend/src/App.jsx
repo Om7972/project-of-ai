@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import Sidebar from './components/enterprise/Sidebar';
 import Assessment from './pages/Assessment';
+import DashboardPage from './pages/DashboardPage';
+import HistoryPage from './pages/HistoryPage';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -115,6 +117,26 @@ const App = () => {
                         <ProtectedRoute>
                             <Layout>
                                 <Assessment />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/analytics"
+                    element={
+                        <ProtectedRoute>
+                            <Layout>
+                                <DashboardPage />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/history"
+                    element={
+                        <ProtectedRoute>
+                            <Layout>
+                                <HistoryPage />
                             </Layout>
                         </ProtectedRoute>
                     }

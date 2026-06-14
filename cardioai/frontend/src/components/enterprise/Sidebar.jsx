@@ -4,7 +4,7 @@ import {
     Activity,
     LayoutDashboard,
     Stethoscope,
-    Users,
+    History,
     Settings,
     HelpCircle,
     Menu,
@@ -21,8 +21,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
     const menuItems = [
         { icon: <Stethoscope size={20} />, label: 'Risk Assessment', path: '/dashboard' },
-        { icon: <LayoutDashboard size={20} />, label: 'Admin Analytics', path: '/admin' },
-        { icon: <Users size={20} />, label: 'Patients List', path: '/patients' },
+        { icon: <LayoutDashboard size={20} />, label: 'Analytics Dashboard', path: '/analytics' },
+        { icon: <History size={20} />, label: 'Prediction History', path: '/history' },
     ];
 
     const bottomItems = [
