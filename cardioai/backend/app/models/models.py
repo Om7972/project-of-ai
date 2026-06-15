@@ -9,7 +9,7 @@ class User(Base):
     """System users (Doctors/Staff)"""
     __tablename__ = "users"
 
-    id              = Column(Integer, primary_key=True, index=True)
+    id              = Column(Integer, primary_key=True, autoincrement=True, index=True)
     name            = Column(String(255), nullable=False)
     email           = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
@@ -20,7 +20,7 @@ class Patient(Base):
     """Patient demographic and clinical intake data"""
     __tablename__ = "patients"
 
-    id         = Column(Integer, primary_key=True, index=True)
+    id         = Column(Integer, primary_key=True, autoincrement=True, index=True)
     name       = Column(String(255), nullable=False)
     age        = Column(Integer, nullable=False)
     gender     = Column(Integer, nullable=False) # 1: Female, 2: Male
@@ -33,7 +33,7 @@ class Prediction(Base):
     """ML diagnostic results tied to patients"""
     __tablename__ = "predictions"
 
-    id                     = Column(Integer, primary_key=True, index=True)
+    id                     = Column(Integer, primary_key=True, autoincrement=True, index=True)
     patient_id             = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
     probability            = Column(Float, nullable=False) # 0-100
     risk_level             = Column(String(20), nullable=False) # Low | Moderate | High

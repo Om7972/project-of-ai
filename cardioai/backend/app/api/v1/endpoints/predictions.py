@@ -101,6 +101,41 @@ async def get_predictions_history(skip: int = 0, limit: int = 20, db: AsyncSessi
     return history
 
 
+@router.get("/stats", response_model=StatsResponse)
+async def get_stats(db: AsyncSession = Depends(get_db), current_user=Depends(get_current_user)):
+    total_query = select(func.count(Prediction.id))
+    total_result = await db.execute(total_query)
+    total = total_result.scalar() or 0
+
+    high_query = select(func.count(Prediction.id)).where(Prediction.risk_level == "High")
+    high_result = await db.execute(high_query)
+    high = high_result.scalar() or 0
+
+    moderate_query = select(func.count(Prediction.id)).where(Prediction.risk_level == "Moderate")
+    moderate_result = await db.execute(moderate_query)
+    moderate = moderate_result.scalar() or 0
+
+    low_query = select(func.count(Prediction.id)).where(Prediction.risk_level == "Low")
+    low_result = await db.execute(low_query)
+    low = low_result.scalar() or 0
+
+    positive_query = select(func.count(Prediction.id)).where(Prediction.probability >= 50)
+    positive_result = await db.execute(positive_query)
+    positive = positive_result.scalar() or 0
+    negative = total - positive
+
+    return StatsResponse(
+        total_predictions=total,
+        high_risk_cases=high,
+        moderate_risk_cases=moderate,
+        low_risk_cases=low,
+        negative_cases=negative,
+        positive_cases=positive,
+        model_accuracy_pct=92.4,
+        model_name=ml_service.model_name
+    )
+
+
 @router.get("/{prediction_id}", response_model=DiagnosticResponse)
 async def get_prediction_by_id(prediction_id: int, db: AsyncSession = Depends(get_db), current_user=Depends(get_current_user)):
     query = select(Prediction, Patient).join(Patient, Patient.id == Prediction.patient_id).where(Prediction.id == prediction_id)
@@ -144,38 +179,3 @@ async def delete_prediction(prediction_id: int, db: AsyncSession = Depends(get_d
     await db.delete(pred)
     await db.commit()
     return
-
-
-@router.get("/stats", response_model=StatsResponse)
-async def get_stats(db: AsyncSession = Depends(get_db), current_user=Depends(get_current_user)):
-    total_query = select(func.count(Prediction.id))
-    total_result = await db.execute(total_query)
-    total = total_result.scalar() or 0
-
-    high_query = select(func.count(Prediction.id)).where(Prediction.risk_level == "High")
-    high_result = await db.execute(high_query)
-    high = high_result.scalar() or 0
-
-    moderate_query = select(func.count(Prediction.id)).where(Prediction.risk_level == "Moderate")
-    moderate_result = await db.execute(moderate_query)
-    moderate = moderate_result.scalar() or 0
-
-    low_query = select(func.count(Prediction.id)).where(Prediction.risk_level == "Low")
-    low_result = await db.execute(low_query)
-    low = low_result.scalar() or 0
-
-    positive_query = select(func.count(Prediction.id)).where(Prediction.probability >= 50)
-    positive_result = await db.execute(positive_query)
-    positive = positive_result.scalar() or 0
-    negative = total - positive
-
-    return StatsResponse(
-        total_predictions=total,
-        high_risk_cases=high,
-        moderate_risk_cases=moderate,
-        low_risk_cases=low,
-        negative_cases=negative,
-        positive_cases=positive,
-        model_accuracy_pct=92.4,
-        model_name=ml_service.model_name
-    )
