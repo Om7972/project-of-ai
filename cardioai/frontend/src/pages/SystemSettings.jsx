@@ -1,10 +1,25 @@
 import React from 'react';
-import { Database, ShieldAlert, Cpu, Network, Server, HardDrive, KeyRound } from 'lucide-react';
+import { Database, ShieldAlert, Cpu, Network, Server, HardDrive, KeyRound, ScrollText } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
+import { auditApi, healthApi } from '../services/api';
+import { format } from 'date-fns';
 
 const SystemSettings = () => {
     const { user } = useAuth();
     const isAdmin = user?.role === 'admin';
+
+    const { data: health } = useQuery({
+        queryKey: ['health'],
+        queryFn: () => healthApi.check().then((r) => r.data),
+        enabled: isAdmin,
+    });
+
+    const { data: auditLogs = [] } = useQuery({
+        queryKey: ['audit'],
+        queryFn: () => auditApi.list().then((r) => r.data),
+        enabled: isAdmin,
+    });
 
     if (!isAdmin) {
         return (
@@ -106,15 +121,37 @@ const SystemSettings = () => {
                     <div className="grid grid-cols-2 gap-6">
                         <div className="enterprise-card p-6 border-l-4 border-l-emerald-500">
                             <Cpu className="text-emerald-500 mb-4" size={28} />
-                            <h3 className="font-bold text-slate-800">ML Pipeline v1.0.0</h3>
-                            <p className="text-xs text-slate-500 mt-1">XGBoost clinical model loaded in memory.</p>
-                            <button className="text-xs font-bold text-medical-600 mt-4 uppercase tracking-wider hover:underline">Force Reload</button>
+                            <h3 className="font-bold text-slate-800">ML Pipeline v2.0.0</h3>
+                            <p className="text-xs text-slate-500 mt-1">
+                                Model: {health?.model_loaded ? 'XGBoost loaded' : 'Heuristic fallback'} · DB: {health?.db_connected ? 'Connected' : 'Degraded'}
+                            </p>
                         </div>
                         <div className="enterprise-card p-6 border-l-4 border-l-amber-500">
                             <HardDrive className="text-amber-500 mb-4" size={28} />
-                            <h3 className="font-bold text-slate-800">PostgreSQL Store</h3>
-                            <p className="text-xs text-slate-500 mt-1">Data snapshot last taken 4 hours ago.</p>
-                            <button className="text-xs font-bold text-medical-600 mt-4 uppercase tracking-wider hover:underline">Trigger Backup</button>
+                            <h3 className="font-bold text-slate-800">Redis Cache</h3>
+                            <p className="text-xs text-slate-500 mt-1">
+                                Status: {health?.redis_connected ? 'Connected' : 'Unavailable'} · Version: {health?.version}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="enterprise-card p-6">
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                            <ScrollText className="text-medical-600" size={24} />
+                            <h2 className="text-lg font-bold text-slate-800">Compliance Audit Trail</h2>
+                        </div>
+                        <div className="max-h-64 overflow-y-auto space-y-2">
+                            {auditLogs.length === 0 ? (
+                                <p className="text-sm text-slate-400">No audit events recorded yet.</p>
+                            ) : auditLogs.map((log) => (
+                                <div key={log.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 text-sm">
+                                    <div>
+                                        <span className="font-black text-slate-800">{log.action}</span>
+                                        <span className="text-slate-400 ml-2">{log.user_name || 'System'}</span>
+                                    </div>
+                                    <span className="text-xs text-slate-400">{format(new Date(log.created_at), 'MMM d HH:mm')}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

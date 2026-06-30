@@ -1,21 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-    ShieldAlert,
-    Printer,
-    Share2,
-    Download,
-    Info,
-    TrendingDown,
-    AlertTriangle,
-    History
+    ShieldAlert, Download, Info, AlertTriangle, History, Loader2,
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import RiskGauge from './RiskGauge';
 import RiskTrendChart from './RiskTrendChart';
+import ExplainabilityChart from './ExplainabilityChart';
+import { predictApi } from '../../services/api';
 
 const RiskResultCard = ({ result }) => {
+    const [explain, setExplain] = useState(null);
+    const [loadingExplain, setLoadingExplain] = useState(false);
+    const [downloading, setDownloading] = useState(false);
+
     if (!result) return null;
-    const { risk_probability, risk_level } = result;
+    const { risk_probability, risk_level, prediction_id, patient_uid, triage_created } = result;
+
+    useEffect(() => {
+        if (!prediction_id) return;
+        setLoadingExplain(true);
+        predictApi.explain(prediction_id)
+            .then((res) => setExplain(res.data))
+            .catch(() => setExplain(null))
+            .finally(() => setLoadingExplain(false));
+    }, [prediction_id]);
+
+    const handleDownload = async () => {
+        if (!prediction_id) return;
+        setDownloading(true);
+        try {
+            const res = await predictApi.report(prediction_id);
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cardioai_report_${prediction_id}.pdf`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            toast.success('Clinical report downloaded');
+        } catch {
+            toast.error('Failed to generate report');
+        } finally {
+            setDownloading(false);
+        }
+    };
 
     return (
         <motion.div
@@ -32,20 +60,27 @@ const RiskResultCard = ({ result }) => {
                         <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Diagnosis Overview</h2>
                     </div>
                     <h1 className="text-3xl font-black font-display text-slate-900 tracking-tight">Cardiac Profile</h1>
+                    {patient_uid && (
+                        <p className="text-[10px] font-bold text-slate-400">UID: {patient_uid.slice(0, 8)}...</p>
+                    )}
                 </div>
-                <div className="flex gap-2">
-                    <button className="w-10 h-10 rounded-xl bg-white/50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-medical-50 hover:text-medical-600 transition-all">
-                        <Printer size={18} />
-                    </button>
-                    <button className="w-10 h-10 rounded-xl bg-white/50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-medical-50 hover:text-medical-600 transition-all">
-                        <Download size={18} />
-                    </button>
-                </div>
+                <button
+                    onClick={handleDownload}
+                    disabled={!prediction_id || downloading}
+                    className="w-10 h-10 rounded-xl bg-white/50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-medical-50 hover:text-medical-600 transition-all disabled:opacity-50"
+                >
+                    {downloading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+                </button>
             </div>
+
+            {triage_created && (
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
+                    Added to triage queue for clinical review
+                </div>
+            )}
 
             <div className="flex flex-col xl:flex-row items-center gap-10">
                 <RiskGauge probability={risk_probability} riskLevel={risk_level} />
-
                 <div className="flex-1 w-full space-y-6">
                     <div className="p-5 rounded-3xl bg-slate-50/50 border border-slate-100">
                         <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -53,25 +88,26 @@ const RiskResultCard = ({ result }) => {
                             AI Clinical Guidance
                         </h3>
                         <p className="text-sm font-semibold text-slate-700 leading-relaxed">
-                            {risk_level === 'High'
-                                ? 'CRITICAL: High markers detected. Urgent cardiovascular referral required for further diagnostic imaging and stress analysis.'
-                                : risk_level === 'Moderate'
-                                    ? 'MODERATE: Elevated risk signatures found. Recommend implementing non-statin lipid therapy and monitoring BP bi-weekly.'
-                                    : 'STABLE: Low cardiovascular risk profile. Continue standard preventative care and annual checkups.'}
+                            {explain?.summary || (
+                                risk_level === 'High'
+                                    ? 'CRITICAL: High markers detected. Urgent cardiovascular referral required.'
+                                    : risk_level === 'Moderate'
+                                        ? 'MODERATE: Elevated risk signatures found. Recommend monitoring BP bi-weekly.'
+                                        : 'STABLE: Low cardiovascular risk profile. Continue standard preventative care.'
+                            )}
                         </p>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Reliability</div>
-                            <div className="text-sm font-black text-medical-700">92.4% Match</div>
-                        </div>
-                        <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Inference</div>
-                            <div className="text-sm font-black text-medical-700">XGBoost Engine</div>
-                        </div>
-                    </div>
                 </div>
+            </div>
+
+            <div className="pt-6 border-t border-slate-100/50">
+                {loadingExplain ? (
+                    <div className="flex items-center gap-2 text-slate-400 text-sm">
+                        <Loader2 size={16} className="animate-spin" /> Computing explainability...
+                    </div>
+                ) : explain ? (
+                    <ExplainabilityChart contributions={explain.contributions} />
+                ) : null}
             </div>
 
             <div className="pt-6 border-t border-slate-100/50">
@@ -80,10 +116,6 @@ const RiskResultCard = ({ result }) => {
                         <History size={14} />
                         Statistical Risk Trend
                     </h3>
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase">
-                        <TrendingDown size={10} />
-                        -4.2% Variance
-                    </div>
                 </div>
                 <RiskTrendChart currentRisk={risk_probability} />
             </div>
@@ -91,7 +123,7 @@ const RiskResultCard = ({ result }) => {
             <div className="flex items-center gap-2 p-4 rounded-2xl bg-medical-50/50 border border-medical-100">
                 <Info size={16} className="text-medical-600 flex-shrink-0" />
                 <p className="text-[10px] font-bold text-medical-700 leading-tight">
-                    * This diagnostic report is generated based on available clinical markers and should be validated by a board-certified specialist.
+                    * AI-generated diagnostic report. Validate with a board-certified specialist before clinical decisions.
                 </p>
             </div>
         </motion.div>

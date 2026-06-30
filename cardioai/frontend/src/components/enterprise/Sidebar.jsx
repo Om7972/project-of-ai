@@ -23,6 +23,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         { icon: <Stethoscope size={20} />, label: 'Risk Assessment', path: '/dashboard' },
         { icon: <LayoutDashboard size={20} />, label: 'Analytics Dashboard', path: '/analytics' },
         { icon: <History size={20} />, label: 'Prediction History', path: '/history' },
+        { icon: <Heart size={20} />, label: 'Triage Queue', path: '/triage' },
+        ...(user?.role === 'admin' ? [{ icon: <ShieldCheck size={20} />, label: 'Admin Hub', path: '/admin' }] : []),
     ];
 
     const bottomItems = [

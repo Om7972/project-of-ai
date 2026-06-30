@@ -123,10 +123,11 @@ Frontend available at: http://localhost:5173
 ### Option B — Docker Compose (Recommended)
 
 ```bash
-# From project root
+# From cardioai/ directory
+cd cardioai
 docker compose up --build
 
-# OR with Nginx reverse proxy (production profile)
+# Production profile with Nginx reverse proxy
 docker compose --profile production up --build
 ```
 
@@ -135,7 +136,8 @@ Services:
 |----------|------------------------|
 | Backend  | http://localhost:8000  |
 | Frontend | http://localhost:3000  |
-| Nginx    | http://localhost:80    |
+| Redis    | localhost:6379         |
+| Nginx    | http://localhost:80    (production profile) |
 | DB       | localhost:5432         |
 
 ---
@@ -243,17 +245,48 @@ Services:
 | `ALLOWED_ORIGINS`            | http://localhost:3000,…              | CORS allowed origins (comma-separated) |
 | `MODEL_PATH`                 | ml/advanced_heart_model.pkl          | Path to XGBoost model                  |
 | `SCALER_PATH`                | ml/advanced_scaler.pkl               | Path to StandardScaler                 |
-| `DEBUG`                      | False                                | Enable SQLAlchemy echo + debug logs    |
+| `REDIS_URL`                  | redis://localhost:6379/0             | Redis connection string                |
+| `REDIS_ENABLED`              | true                                 | Enable Redis (rate limit, pub/sub)     |
+| `ADMIN_EMAIL`                | odhumkekar@gmail.com                 | Auto-promote to admin on register      |
 
 ---
 
-## 🚀 Enterprise Features
+## 🚀 Enterprise Features (v2.0)
 
-- **🛡️ Clinical JWT Authentication**: Secure staff onboarding and login system with cryptographically protected sessions.
-- **🏥 Multi-Module UI**: High-fidelity React frontend with Framer Motion animations and glassmorphism.
-- **🤖 XGBoost Inference Engine**: Predictive cardiac diagnostics with real-time risk classification.
-- **📊 Hospital Intelligence Hub**: Advanced analytics dashboard with patient records and staff oversight.
-- **🔐 Role-Based Access (RBAC)**: Distinct permissions for **Doctors** and **Administrators**.
+- **🛡️ Clinical JWT Authentication** — Secure staff onboarding, login, logout with audit trail
+- **🧠 SHAP Explainability** — Feature contribution analysis on every prediction
+- **📄 PDF Clinical Reports** — Downloadable branded assessment reports
+- **📈 Patient Timeline** — Longitudinal risk tracking with stable patient UIDs
+- **🚨 Real-time Triage Queue** — WebSocket-powered high/moderate risk case management
+- **📋 Batch CSV Screening** — Upload bulk patient data for mass assessment
+- **🔍 Patient Search** — Search by name or UID from the navbar
+- **📜 Compliance Audit Log** — Admin-visible action history (login, predict, export, delete)
+- **🔗 FHIR-lite Export** — JSON bundle export per prediction
+- **⚡ Redis** — Rate limiting, pub/sub for triage WebSocket
+- **📊 Prometheus Metrics** — `GET /api/metrics` endpoint
+- **🏥 Multi-Module UI** — React + TanStack Query + Framer Motion
+- **🤖 XGBoost Inference Engine** — Predictive cardiac diagnostics with heuristic fallback
+- **🔐 Role-Based Access (RBAC)** — Admin-only routes for Admin Hub, System Settings, Audit
+- **🐳 Production Docker** — Backend, frontend, PostgreSQL, Redis, Nginx profile
+- **✅ CI/CD** — GitHub Actions (pytest + frontend build + Docker)
+
+## 🔌 New API Endpoints (v2)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/predictions/{id}/explain` | SHAP feature contributions |
+| GET | `/api/v1/predictions/{id}/report` | PDF clinical report download |
+| GET | `/api/v1/predictions/{id}/fhir` | FHIR-lite JSON bundle |
+| GET | `/api/v1/predictions/search?q=` | Patient search |
+| GET | `/api/v1/predictions/patients/{uid}/timeline` | Patient assessment history |
+| GET | `/api/v1/triage/` | Triage queue |
+| PATCH | `/api/v1/triage/{id}` | Update triage case |
+| GET | `/api/v1/audit/` | Audit log (admin) |
+| POST | `/api/v1/batch/upload` | CSV batch screening |
+| GET/PUT | `/api/v1/auth/preferences` | User preferences (persisted) |
+| POST | `/api/v1/auth/logout` | Logout with audit |
+| WS | `/api/v1/ws/triage` | Real-time triage updates |
+| GET | `/api/metrics` | Prometheus metrics |
 
 ## 🔑 Admin Credentials
 The system automatically promotes the following user to **Administrator** status upon registration:

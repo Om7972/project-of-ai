@@ -23,7 +23,21 @@ const Assessment = () => {
         setLoading(true);
         setResult(null);
         try {
-            const response = await predictApi.predict(formData);
+            const payload = {
+                ...formData,
+                age: Number(formData.age),
+                gender: Number(formData.gender),
+                height: Number(formData.height),
+                weight: Number(formData.weight),
+                ap_hi: Number(formData.ap_hi),
+                ap_lo: Number(formData.ap_lo),
+                cholesterol: Number(formData.cholesterol),
+                gluc: Number(formData.gluc),
+                smoke: Number(formData.smoke),
+                alco: Number(formData.alco),
+                active: Number(formData.active),
+            };
+            const response = await predictApi.predict(payload);
             setResult(response.data);
             toast.success('Clinical analysis synchronized');
         } catch (error) {

@@ -1,41 +1,44 @@
 from pydantic_settings import BaseSettings
 from typing import List
-import os
+
 
 class Settings(BaseSettings):
-    # ── App ──────────────────────────────────────────────────────────────────
     APP_NAME: str = "CardioAI Hospital System"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "2.0.0"
     DEBUG: bool = False
 
-    # ── Database ─────────────────────────────────────────────────────────────
-    DATABASE_URL: str = (
-        "sqlite+aiosqlite:///./cardioai.db"  # Use SQLite for local dev
-    )
-    DATABASE_URL_SYNC: str = (
-        "sqlite:///./cardioai.db"
-    )
+    DATABASE_URL: str = "sqlite+aiosqlite:///./cardioai.db"
+    DATABASE_URL_SYNC: str = "sqlite:///./cardioai.db"
 
-    # ── Security ─────────────────────────────────────────────────────────────
     SECRET_KEY: str = "your-super-secret-key-change-this-in-production-min-32-chars"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
-    # ── CORS ─────────────────────────────────────────────────────────────────
     ALLOWED_ORIGINS: str = (
-        "http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:80,http://127.0.0.1:5173,http://127.0.0.1:5174"
+        "http://localhost:3000,http://localhost:5173,http://localhost:5174,"
+        "http://localhost:80,http://127.0.0.1:5173,http://127.0.0.1:5174"
     )
 
-    # ── ML Model Paths ───────────────────────────────────────────────────────
     MODEL_PATH: str = "ml/advanced_heart_model.pkl"
     SCALER_PATH: str = "ml/advanced_scaler.pkl"
 
+    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_ENABLED: bool = True
+
+    RATE_LIMIT_PREDICT: str = "30/minute"
+    RATE_LIMIT_AUTH: str = "10/minute"
+
+    ADMIN_EMAIL: str = "odhumkekar@gmail.com"
+    HIGH_RISK_THRESHOLD: float = 65.0
+    MODERATE_RISK_THRESHOLD: float = 40.0
+
     @property
     def origins_list(self) -> List[str]:
-        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",")]
+        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
 
     class Config:
         env_file = ".env"
         case_sensitive = True
+
 
 settings = Settings()

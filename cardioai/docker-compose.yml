@@ -1,7 +1,6 @@
 version: "3.9"
 
 services:
-  # ── PostgreSQL Clinical Database ───────────────────────────
   db:
     image: postgres:16-alpine
     container_name: cardioai_db
@@ -15,12 +14,23 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-cardioai_user} -d ${DB_NAME:-cardioai_db}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-cardioai_user} -d ${DB_NAME:-cardioai_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ── FastAPI Healthcare API ─────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: cardioai_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -29,17 +39,53 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+asyncpg://${DB_USER:-cardioai_user}:${DB_PASSWORD:-cardioai_password}@db:5432/${DB_NAME:-cardioai_db}
+      DATABASE_URL_SYNC: postgresql://${DB_USER:-cardioai_user}:${DB_PASSWORD:-cardioai_password}@db:5432/${DB_NAME:-cardioai_db}
+      REDIS_URL: redis://redis:6379/0
+      REDIS_ENABLED: "true"
       SECRET_KEY: ${SECRET_KEY:-change-me-to-a-random-secret-key-in-prod}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 60
-      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:5173,http://localhost:5174"
+      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:5173,http://localhost:80"
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
-      - ./backend/ml:/app/ml # Model persistence
+      - ./backend/ml:/app/ml
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ""
+    container_name: cardioai_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  nginx:
+    profiles: ["production"]
+    image: nginx:alpine
+    container_name: cardioai_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
 
 volumes:
   postgres_data:

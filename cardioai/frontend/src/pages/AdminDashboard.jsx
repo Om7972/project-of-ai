@@ -88,7 +88,7 @@ const AdminDashboard = () => {
             .filter(item => {
                 const searchLower = searchTerm.toLowerCase();
                 if (activeTab === 'patients') {
-                    return item.name.toLowerCase().includes(searchLower) || item.risk_level.toLowerCase().includes(searchLower);
+                    return (item.patient_name || '').toLowerCase().includes(searchLower) || item.risk_level.toLowerCase().includes(searchLower);
                 } else {
                     return item.name.toLowerCase().includes(searchLower) || item.email.toLowerCase().includes(searchLower);
                 }
@@ -200,11 +200,11 @@ const AdminDashboard = () => {
                                         {filteredData.map((p) => (
                                             <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                                                 <td className="px-6 py-4">
-                                                    <div className="font-bold text-slate-800">{p.name}</div>
+                                                    <div className="font-bold text-slate-800">{p.patient_name}</div>
                                                     <div className="text-xs text-slate-400 font-medium">Case #{p.id}</div>
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-slate-600 font-medium">
-                                                    Age: {p.age} · {p.sex === 1 ? 'Male' : 'Female'}
+                                                    Age: {p.patient_age} · {p.patient_gender === 2 ? 'Male' : 'Female'}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`risk-badge ${p.risk_level === 'High' ? 'bg-red-50 text-red-600' :

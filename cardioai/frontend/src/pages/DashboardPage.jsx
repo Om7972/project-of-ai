@@ -1,29 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { predictApi } from '../services/api'
-import useAuthStore from '../store/authStore'
+import { useAuth } from '../context/AuthContext'
 import { Activity, ShieldAlert, ShieldCheck, TrendingUp, Users } from 'lucide-react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
-import toast from 'react-hot-toast'
 
 export default function DashboardPage() {
-    const { user } = useAuthStore()
-    const [stats, setStats] = useState(null)
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const { data } = await predictApi.stats()
-                setStats(data)
-            } catch (err) {
-                toast.error('Failed to load dashboard statistics')
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchStats()
-    }, [])
+    const { user } = useAuth()
+    const { data: stats, isLoading: loading } = useQuery({
+        queryKey: ['stats'],
+        queryFn: () => predictApi.stats().then((r) => r.data),
+    })
 
     if (loading) {
         return (
@@ -45,7 +32,7 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 bg-hero-pattern opacity-30" />
                 <div className="relative z-10">
                     <h1 className="text-3xl font-display font-bold text-white mb-2">
-                        Welcome, {user?.full_name?.split(' ')[0]} 👋
+                        Welcome, {user?.name?.split(' ')[0]} 👋
                     </h1>
                     <p className="text-slate-400">
                         Overview of your cardiac prediction activity and system status.
@@ -58,7 +45,7 @@ export default function DashboardPage() {
 
                 {/* Quick Actions */}
                 <div className="flex flex-wrap gap-4">
-                    <Link to="/predict" className="btn-primary">
+                    <Link to="/dashboard" className="btn-primary">
                         <Activity className="w-4 h-4" />
                         New Prediction
                     </Link>
@@ -170,7 +157,7 @@ export default function DashboardPage() {
                             <p className="text-slate-400 max-w-md mx-auto">
                                 The ML model is loaded and ready. Navigate to the Predict tab to input patient parameters and receive a cardiac event risk assessment.
                             </p>
-                            <Link to="/predict" className="btn-primary mt-4 inline-flex">
+                            <Link to="/dashboard" className="btn-primary mt-4 inline-flex">
                                 Start Assessment
                             </Link>
                         </div>
