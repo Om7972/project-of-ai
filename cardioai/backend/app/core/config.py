@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     SCALER_PATH: str = "ml/advanced_scaler.pkl"
 
     REDIS_URL: str = "redis://localhost:6379/0"
-    REDIS_ENABLED: bool = True
+    REDIS_ENABLED: bool = False
 
     RATE_LIMIT_PREDICT: str = "30/minute"
     RATE_LIMIT_AUTH: str = "10/minute"

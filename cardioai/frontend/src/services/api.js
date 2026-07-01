@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE_URL = import.meta.env.VITE_API_URL || ''
+const BASE_URL = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '')
 
 const api = axios.create({
     baseURL: `${BASE_URL}/api/v1`,
@@ -88,6 +88,10 @@ export const healthApi = {
 }
 
 export const getWsUrl = () => {
+    if (import.meta.env.DEV) {
+        const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+        return `${proto}//${window.location.host}/api/v1/ws/triage`
+    }
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = BASE_URL ? new URL(BASE_URL).host : window.location.host
     return `${proto}//${host}/api/v1/ws/triage`
